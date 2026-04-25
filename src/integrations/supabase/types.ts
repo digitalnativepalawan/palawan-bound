@@ -14,7 +14,134 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      admin_edits: {
+        Row: {
+          created_at: string
+          entity_id: string | null
+          entity_type: string
+          field_name: string
+          id: string
+          new_value: string | null
+          old_value: string | null
+        }
+        Insert: {
+          created_at?: string
+          entity_id?: string | null
+          entity_type: string
+          field_name: string
+          id?: string
+          new_value?: string | null
+          old_value?: string | null
+        }
+        Update: {
+          created_at?: string
+          entity_id?: string | null
+          entity_type?: string
+          field_name?: string
+          id?: string
+          new_value?: string | null
+          old_value?: string | null
+        }
+        Relationships: []
+      }
+      destinations: {
+        Row: {
+          code: string
+          created_at: string
+          id: string
+          image_url: string | null
+          map_hint: string | null
+          name: string
+          sort_order: number
+          updated_at: string
+        }
+        Insert: {
+          code: string
+          created_at?: string
+          id?: string
+          image_url?: string | null
+          map_hint?: string | null
+          name: string
+          sort_order?: number
+          updated_at?: string
+        }
+        Update: {
+          code?: string
+          created_at?: string
+          id?: string
+          image_url?: string | null
+          map_hint?: string | null
+          name?: string
+          sort_order?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      travel_items: {
+        Row: {
+          active: boolean
+          created_at: string
+          destination_id: string | null
+          duration: string | null
+          id: string
+          image_url: string | null
+          land_type: string | null
+          name: string
+          price: number
+          route_from: string | null
+          route_to: string | null
+          section: string
+          short_info: string
+          sort_order: number
+          transport_mode: string | null
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          created_at?: string
+          destination_id?: string | null
+          duration?: string | null
+          id?: string
+          image_url?: string | null
+          land_type?: string | null
+          name: string
+          price?: number
+          route_from?: string | null
+          route_to?: string | null
+          section: string
+          short_info?: string
+          sort_order?: number
+          transport_mode?: string | null
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          created_at?: string
+          destination_id?: string | null
+          duration?: string | null
+          id?: string
+          image_url?: string | null
+          land_type?: string | null
+          name?: string
+          price?: number
+          route_from?: string | null
+          route_to?: string | null
+          section?: string
+          short_info?: string
+          sort_order?: number
+          transport_mode?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "travel_items_destination_id_fkey"
+            columns: ["destination_id"]
+            isOneToOne: false
+            referencedRelation: "destinations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never

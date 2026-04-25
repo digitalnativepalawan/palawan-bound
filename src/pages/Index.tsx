@@ -1,15 +1,13 @@
-// 🔥 UPDATED UI VERSION (SAFE – NO LOGIC BROKEN)
-
 import { useEffect, useMemo, useState } from "react";
-import { Edit3, MapPin, Plane, Plus, Ship, Trash2, UserRound, X } from "lucide-react";
-import import { useEffect, useMemo, useState } from "react";
-import { Editimport { useEffect, useMemo, useState } from "react";
-import { Edit3, MapPin, Plane, Plus, Ship, Trash2, UserRound, X } from "lucide-react";
+import { Edit3, X } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import TripHero from "@/components/TripHero";
+import TravelCard from "@/components/TravelCard";
+import AdminPanel from "@/components/AdminPanel";
 
-/* TYPES */
+// ─── Types ───────────────────────────────────────────────────────────────────
 
-type Destination = {
+export type Destination = {
   id: string;
   code: "A" | "B" | "C" | "D" | "E";
   name: string;
@@ -18,219 +16,11 @@ type Destination = {
   sort_order: number;
 };
 
-type Section = "stay" | "experiences" | "lifestyle" | "transport";
+export type Section = "stay" | "experiences" | "lifestyle" | "transport";
+export type TransportMode = "Air" | "Sea" | "Land";
+export type LandType = "Public" | "Private" | "Private with driver";
 
-type TravelItem = {
-  id: string;
-  destination_id: string;
-  section: Section;
-  name: string;
-  price: number;
-  short_info: string;
-  image_url: string | null;
-  transport_mode: string | null;
-  land_type: string | null;
-  duration: string | null;
-  route_from: string | null;
-  route_to: string | null;
-  sort_order: number;
-  active: boolean;
-};
-
-const db = supabase as any;
-
-const sectionLabels = {
-  stay: "Stay",
-  experiences: "Experiences",
-  lifestyle: "Lifestyle",
-  transport: "Transport",
-};
-
-const sectionOrder: Section[] = ["stay", "experiences", "lifestyle", "transport"];
-const airports = ["Puerto Princesa Airport", "El Nido Airport", "Busuanga Airport"];
-const money = (v: number) => `₱${Number(v || 0).toLocaleString("en-PH")}`;
-
-/* MAIN */
-
-const Index = () => {
-  const [destinations, setDestinations] = useState<Destination[]>([]);
-  const [items, setItems] = useState<TravelItem[]>([]);
-  const [airport, setAirport] = useState(airports[0]);
-  const [destinationId, setDestinationId] = useState("");
-  const [trip, setTrip] = useState<TravelItem[]>([]);
-  const [adminOpen, setAdminOpen] = useState(false);
-  const [adminPass, setAdminPass] = useState("");
-  const [isAdmin, setIsAdmin] = useState(false);
-
-  const selected =
-    destinations.find((d) => d.id === destinationId) ?? destinations[0];
-
-  const filtered = items.filter(
-    (i) => i.destination_id === selected?.id && i.active
-  );
-
-  const total = useMemo(
-    () => trip.reduce((sum, i) => sum + Number(i.price), 0),
-    [trip]
-  );
-
-  useEffect(() => {
-    load();
-  }, []);
-
-  useEffect(() => {
-    if (!destinationId && destinations[0]) setDestinationId(destinations[0].id);
-  }, [destinations]);
-
-  const load = async () => {
-    const { data: d } = await db.from("destinations").select("*").order("sort_order");
-    const { data: i } = await db.from("travel_items").select("*").order("sort_order");
-    setDestinations(d || []);
-    setItems((i || []).map((x: any) => ({ ...x, price: Number(x.price) })));
-  };
-
-  const toggleTrip = (item: TravelItem) => {
-    setTrip((cur) =>
-      cur.some((t) => t.id === item.id)
-        ? cur.filter((t) => t.id !== item.id)
-        : [...cur, item]
-    );
-  };
-
-  const login = () => {
-    if (adminPass === "5309") {
-      setIsAdmin(true);
-      setAdminOpen(false);
-    }
-  };
-
-  return (
-    <main className="min-h-screen bg-background pb-28">
-
-      {/* HEADER */}
-      <header className="sticky top-0 bg-white/80 backdrop-blur border-b px-4 py-3">
-        <div className="max-w-xl mx-auto flex justify-between">
-          <div>
-            <p className="text-xs text-primary font-bold">PALAWAN</p>
-            <h1 className="text-xl font-bold">Build your island trip</h1>
-          </div>
-          <button onClick={() => setAdminOpen(true)}>
-            <Edit3 size={18} />
-          </button>
-        </div>
-      </header>
-
-      <div className="max-w-xl mx-auto px-4 py-5 space-y-5">
-
-        {/* HERO */}
-        {selected && (
-          <div className="relative rounded-2xl overflow-hidden shadow">
-            <img
-              src={selected.image_url || "https://images.unsplash.com/photo-1507525428034-b723cf961d3e"}
-              className="h-44 w-full object-cover"
-            />
-            <div className="absolute inset-0 bg-black/30" />
-            <div className="absolute bottom-3 left-3 text-white">
-              <div className="text-sm">Destination {selected.code}</div>
-              <div className="text-lg font-bold">{selected.name}</div>
-              <div className="text-xs">From {airport}</div>
-            </div>
-          </div>
-        )}
-
-        {/* SELECTOR */}
-        <div className="flex gap-2 overflow-x-auto">
-          {destinations.map((d) => (
-            <button
-              key={d.id}
-              onClick={() => setDestinationId(d.id)}
-              className={`px-4 py-2 rounded-full text-sm ${
-                d.id === selected?.id ? "bg-black text-white" : "bg-gray-200"
-              }`}
-            >
-              {d.code}
-            </button>
-          ))}
-        </div>
-
-        {/* SECTIONS */}
-        {sectionOrder.map((section) => (
-          <div key={section} className="space-y-3">
-            <h2 className="font-bold">{sectionLabels[section]}</h2>
-
-            {filtered
-              .filter((i) => i.section === section)
-              .map((item) => (
-                <div key={item.id} className="border rounded-xl p-4">
-                  <div className="flex justify-between">
-                    <div>
-                      <h3 className="font-bold">{item.name}</h3>
-                      <p className="text-sm text-gray-500">
-                        {item.short_info}
-                      </p>
-                    </div>
-                    <b>{money(item.price)}</b>
-                  </div>
-
-                  <button
-                    onClick={() => toggleTrip(item)}
-                    className="mt-3 w-full bg-black text-white py-2 rounded-xl"
-                  >
-                    Add to trip
-                  </button>
-                </div>
-              ))}
-          </div>
-        ))}
-      </div>
-
-      {/* TOTAL */}
-      <div className="fixed bottom-0 w-full bg-white border-t p-4">
-        <div className="max-w-xl mx-auto flex justify-between">
-          <b>{money(total)}</b>
-          <button className="bg-black text-white px-4 py-2 rounded-xl">
-            Review
-          </button>
-        </div>
-      </div>
-
-      {/* ADMIN */}
-      {adminOpen && !isAdmin && (
-        <div className="fixed inset-0 flex items-center justify-center bg-black/40">
-          <div className="bg-white p-5 rounded-xl">
-            <input
-              value={adminPass}
-              onChange={(e) => setAdminPass(e.target.value)}
-              placeholder="Passkey"
-              className="border p-2 mb-2"
-            />
-            <button onClick={login} className="bg-black text-white px-3 py-2">
-              Enter
-            </button>
-          </div>
-        </div>
-      )}
-    </main>
-  );
-};
-
-export default Index;3, MapPin, Plane, Plus, Ship, Trash2, UserRound, X } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
-
-type Destination = {
-  id: string;
-  code: "A" | "B" | "C" | "D" | "E";
-  name: string;
-  image_url: string | null;
-  map_hint: string | null;
-  sort_order: number;
-};
-
-type Section = "stay" | "experiences" | "lifestyle" | "transport";
-type TransportMode = "Air" | "Sea" | "Land";
-type LandType = "Public" | "Private" | "Private with driver";
-
-type TravelItem = {
+export type TravelItem = {
   id: string;
   destination_id: string;
   section: Section;
@@ -247,294 +37,59 @@ type TravelItem = {
   active: boolean;
 };
 
+// ─── Constants ────────────────────────────────────────────────────────────────
+
 const db = supabase as any;
 
-const sectionLabels: Record<Section, string> = {
-  stay: "Stay",
-  experiences: "Experiences",
-  lifestyle: "Lifestyle",
-  transport: "Transport",
-};
+const SECTIONS: { key: Section; label: string }[] = [
+  { key: "stay", label: "Stay" },
+  { key: "experiences", label: "Experiences" },
+  { key: "lifestyle", label: "Lifestyle" },
+  { key: "transport", label: "Transport" },
+];
 
-const sectionOrder: Section[] = ["stay", "experiences", "lifestyle", "transport"];
-const airports = ["Puerto Princesa Airport", "El Nido Airport", "Busuanga Airport"];
-const money = (value: number) => `₱${Number(value || 0).toLocaleString("en-PH")}`;
+const AIRPORTS = ["Puerto Princesa", "El Nido", "Busuanga"];
+
+export const money = (v: number) =>
+  `₱${Number(v || 0).toLocaleString("en-PH")}`;
+
+// ─── Main Page ────────────────────────────────────────────────────────────────
 
 const Index = () => {
   const [destinations, setDestinations] = useState<Destination[]>([]);
   const [items, setItems] = useState<TravelItem[]>([]);
-  const [origin, setOrigin] = useState("");
-  const [airport, setAirport] = useState(airports[0]);
+  const [airport, setAirport] = useState(AIRPORTS[0]);
   const [destinationId, setDestinationId] = useState("");
+  const [activeSection, setActiveSection] = useState<Section | "all">("all");
   const [trip, setTrip] = useState<TravelItem[]>([]);
   const [reviewOpen, setReviewOpen] = useState(false);
   const [adminOpen, setAdminOpen] = useState(false);
   const [adminPass, setAdminPass] = useState("");
   const [isAdmin, setIsAdmin] = useState(false);
-  const [editingItemId, setEditingItemId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  const selectedDestination =
+  const selectedDest =
     destinations.find((d) => d.id === destinationId) ?? destinations[0];
 
-  const destinationItems = items.filter(
-    (item) => item.destination_id === selectedDestination?.id && item.active
+  const destItems = useMemo(
+    () =>
+      items.filter(
+        (item) => item.destination_id === selectedDest?.id && item.active,
+      ),
+    [items, selectedDest],
   );
+
+  const visibleSections =
+    activeSection === "all"
+      ? SECTIONS
+      : SECTIONS.filter((s) => s.key === activeSection);
 
   const total = useMemo(
     () => trip.reduce((sum, item) => sum + Number(item.price), 0),
-    [trip]
+    [trip],
   );
 
-  useEffect(() => {
-    loadData();
-  }, []);
-
-  useEffect(() => {
-    if (!destinationId && destinations[0]) setDestinationId(destinations[0].id);
-  }, [destinations]);
-
-  const loadData = async () => {
-    setIsLoading(true);
-    const [{ data: d }, { data: i }] = await Promise.all([
-      db.from("destinations").select("*").order("sort_order"),
-      db.from("travel_items").select("*").order("sort_order"),
-    ]);
-    setDestinations(d ?? []);
-    setItems((i ?? []).map((x: any) => ({ ...x, price: Number(x.price) })));
-    setIsLoading(false);
-  };
-
-  const toggleTripItem = (item: TravelItem) => {
-    setTrip((cur) =>
-      cur.some((t) => t.id === item.id)
-        ? cur.filter((t) => t.id !== item.id)
-        : [...cur, item]
-    );
-  };
-
-  const submitAdmin = () => {
-    if (adminPass === "5309") {
-      setIsAdmin(true);
-      setAdminPass("");
-      setAdminOpen(false);
-    }
-  };
-
-  return (
-    <main className="min-h-screen bg-background pb-28 text-foreground">
-
-      {/* HEADER */}
-      <header className="sticky top-0 z-20 border-b bg-background/90 backdrop-blur px-4 py-3">
-        <div className="flex justify-between max-w-xl mx-auto">
-          <div>
-            <p className="text-xs font-bold text-primary uppercase">
-              Palawan planner
-            </p>
-            <h1 className="text-xl font-bold">
-              Build your island trip
-            </h1>
-          </div>
-          <button onClick={() => setAdminOpen(true)}>
-            <Edit3 />
-          </button>
-        </div>
-      </header>
-
-      <div className="max-w-xl mx-auto px-4 py-5 space-y-5">
-
-        {/* HERO */}
-        <div className="space-y-3">
-
-          <div className="soft-panel p-3">
-            <div className="text-sm font-medium">
-              {origin || "Origin"} → {airport.replace(" Airport", "")}
-            </div>
-            <div className="text-xs text-muted-foreground">
-              Destination {selectedDestination?.code}
-            </div>
-          </div>
-
-          {selectedDestination && (
-            <div className="relative rounded-2xl overflow-hidden shadow-card">
-              <img
-                src={
-                  selectedDestination.image_url ||
-                  "https://images.unsplash.com/photo-1507525428034-b723cf961d3e"
-                }
-                className="w-full h-44 object-cover"
-              />
-              <div className="absolute inset-0 bg-black/30" />
-              <div className="absolute bottom-3 left-3 text-white">
-                <div className="text-sm opacity-80">
-                  Destination {selectedDestination.code}
-                </div>
-                <div className="text-lg font-semibold">
-                  {selectedDestination.name}
-                </div>
-                <div className="text-xs opacity-80">
-                  From {airport.replace(" Airport", "")}
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* 🔥 2027 selector */}
-          <div className="flex gap-2 overflow-x-auto pb-1">
-            {destinations.map((d) => (
-              <button
-                key={d.id}
-                onClick={() => setDestinationId(d.id)}
-                className={`min-w-[70px] rounded-full px-4 py-2 text-sm font-semibold transition ${
-                  d.id === selectedDestination?.id
-                    ? "bg-primary text-white shadow-lift"
-                    : "bg-muted text-muted-foreground"
-                }`}
-              >
-                {d.code}
-              </button>
-            ))}
-          </div>
-
-        </div>
-
-        {/* SECTIONS */}
-        {sectionOrder.map((section) => (
-          <section key={section} className="space-y-3">
-            <h2 className="text-lg font-bold">{sectionLabels[section]}</h2>
-
-            {destinationItems
-              .filter((i) => i.section === section)
-              .map((item) => (
-                <div key={item.id} className="travel-card p-4">
-                  <div className="flex justify-between">
-                    <div>
-                      <h3 className="font-bold">{item.name}</h3>
-                      <p className="text-sm text-muted-foreground">
-                        {item.short_info}
-                      </p>
-                    </div>
-                    <b>{money(item.price)}</b>
-                  </div>
-
-                  <button
-                    onClick={() => toggleTripItem(item)}
-                    className="mt-3 w-full bg-primary text-white py-2 rounded-xl"
-                  >
-                    Add to trip
-                  </button>
-                </div>
-              ))}
-          </section>
-        ))}
-      </div>
-
-      {/* BOTTOM BAR */}
-      <div className="fixed bottom-0 left-0 right-0 p-4 bg-background border-t">
-        <div className="flex justify-between max-w-xl mx-auto">
-          <b>{money(total)}</b>
-          <button
-            onClick={() => setReviewOpen(true)}
-            className="bg-black text-white px-4 py-2 rounded-xl"
-          >
-            Review
-          </button>
-        </div>
-      </div>
-
-      {adminOpen && !isAdmin && (
-        <div className="fixed inset-0 flex items-center justify-center bg-black/40">
-          <div className="bg-white p-5 rounded-2xl">
-            <input
-              value={adminPass}
-              onChange={(e) => setAdminPass(e.target.value)}
-              placeholder="Passkey"
-              className="border p-2 mb-2"
-            />
-            <button onClick={submitAdmin} className="bg-black text-white px-3 py-2">
-              Enter
-            </button>
-          </div>
-        </div>
-      )}
-    </main>
-  );
-};
-
-export default Index;{ supabase } from "@/integrations/supabase/client";
-
-/* ---------- TYPES (unchanged) ---------- */
-
-type Destination = {
-  id: string;
-  code: "A" | "B" | "C" | "D" | "E";
-  name: string;
-  image_url: string | null;
-  map_hint: string | null;
-  sort_order: number;
-};
-
-type Section = "stay" | "experiences" | "lifestyle" | "transport";
-type TransportMode = "Air" | "Sea" | "Land";
-type LandType = "Public" | "Private" | "Private with driver";
-
-type TravelItem = {
-  id: string;
-  destination_id: string;
-  section: Section;
-  name: string;
-  price: number;
-  short_info: string;
-  image_url: string | null;
-  transport_mode: TransportMode | null;
-  land_type: LandType | null;
-  duration: string | null;
-  route_from: string | null;
-  route_to: string | null;
-  sort_order: number;
-  active: boolean;
-};
-
-const db = supabase as any;
-
-const sectionLabels: Record<Section, string> = {
-  stay: "Stay",
-  experiences: "Experiences",
-  lifestyle: "Lifestyle",
-  transport: "Transport",
-};
-
-const sectionOrder: Section[] = ["stay", "experiences", "lifestyle", "transport"];
-const airports = ["Puerto Princesa Airport", "El Nido Airport", "Busuanga Airport"];
-const money = (value: number) => `₱${Number(value || 0).toLocaleString("en-PH")}`;
-
-/* ---------- MAIN ---------- */
-
-const Index = () => {
-  const [destinations, setDestinations] = useState<Destination[]>([]);
-  const [items, setItems] = useState<TravelItem[]>([]);
-  const [origin, setOrigin] = useState("");
-  const [airport, setAirport] = useState(airports[0]);
-  const [destinationId, setDestinationId] = useState("");
-  const [trip, setTrip] = useState<TravelItem[]>([]);
-  const [reviewOpen, setReviewOpen] = useState(false);
-  const [adminOpen, setAdminOpen] = useState(false);
-  const [adminPass, setAdminPass] = useState("");
-  const [isAdmin, setIsAdmin] = useState(false);
-  const [editingItemId, setEditingItemId] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-
-  const selectedDestination =
-    destinations.find((d) => d.id === destinationId) ?? destinations[0];
-
-  const destinationItems = items.filter(
-    (item) => item.destination_id === selectedDestination?.id && item.active
-  );
-
-  const total = useMemo(
-    () => trip.reduce((sum, item) => sum + Number(item.price), 0),
-    [trip]
-  );
+  // ── Load ──────────────────────────────────────────────────────────────────
 
   useEffect(() => {
     void loadData();
@@ -542,26 +97,122 @@ const Index = () => {
 
   useEffect(() => {
     if (!destinationId && destinations[0]) setDestinationId(destinations[0].id);
-  }, [destinations]);
+  }, [destinations, destinationId]);
 
   const loadData = async () => {
     setIsLoading(true);
-    const [{ data: d }, { data: i }] = await Promise.all([
-      db.from("destinations").select("*").order("sort_order"),
-      db.from("travel_items").select("*").order("sort_order"),
+    const [{ data: dRows }, { data: iRows }] = await Promise.all([
+      db.from("destinations").select("*").order("sort_order", { ascending: true }),
+      db.from("travel_items").select("*").order("sort_order", { ascending: true }),
     ]);
-    setDestinations(d ?? []);
-    setItems((i ?? []).map((x: any) => ({ ...x, price: Number(x.price) })));
+    setDestinations((dRows ?? []) as Destination[]);
+    setItems(
+      ((iRows ?? []) as TravelItem[]).map((i) => ({
+        ...i,
+        price: Number(i.price),
+      })),
+    );
     setIsLoading(false);
   };
 
-  const toggleTripItem = (item: TravelItem) => {
+  // ── Admin helpers ─────────────────────────────────────────────────────────
+
+  const recordEdit = async (
+    entityType: string,
+    entityId: string,
+    fieldName: string,
+    oldValue: unknown,
+    newValue: unknown,
+  ) => {
+    await db.from("admin_edits").insert({
+      entity_type: entityType,
+      entity_id: entityId,
+      field_name: fieldName,
+      old_value: String(oldValue ?? ""),
+      new_value: String(newValue ?? ""),
+    });
+  };
+
+  const updateDestination = async (
+    id: string,
+    field: keyof Pick<Destination, "name" | "image_url" | "map_hint">,
+    value: string,
+  ) => {
+    const prev = destinations.find((d) => d.id === id)?.[field];
+    setDestinations((cur) =>
+      cur.map((d) => (d.id === id ? { ...d, [field]: value } : d)),
+    );
+    await db.from("destinations").update({ [field]: value }).eq("id", id);
+    await recordEdit("destination", id, field, prev, value);
+  };
+
+  const updateItem = async (id: string, patch: Partial<TravelItem>) => {
+    const prev = items.find((i) => i.id === id);
+    const clean = {
+      ...patch,
+      price: patch.price !== undefined ? Number(patch.price) : undefined,
+    };
+    setItems((cur) =>
+      cur.map((i) => (i.id === id ? { ...i, ...clean } : i)),
+    );
+    setTrip((cur) =>
+      cur.map((i) => (i.id === id ? { ...i, ...clean } : i)),
+    );
+    await db.from("travel_items").update(clean).eq("id", id);
+    const field = Object.keys(patch)[0] ?? "item";
+    await recordEdit(
+      "item",
+      id,
+      field,
+      prev?.[field as keyof TravelItem],
+      patch[field as keyof TravelItem],
+    );
+  };
+
+  const addItem = async (section: Section) => {
+    if (!selectedDest) return;
+    const payload = {
+      destination_id: selectedDest.id,
+      section,
+      name: section === "transport" ? "New route" : "New package",
+      price: 0,
+      short_info: "Add details.",
+      transport_mode: section === "transport" ? "Land" : null,
+      land_type: section === "transport" ? "Private" : null,
+      duration: section === "transport" ? "1 hr" : null,
+      route_from: section === "transport" ? airport : null,
+      route_to: selectedDest.name,
+      sort_order: items.length + 1,
+      active: true,
+    };
+    const { data } = await db
+      .from("travel_items")
+      .insert(payload)
+      .select("*")
+      .single();
+    if (data)
+      setItems((cur) => [
+        ...cur,
+        { ...(data as TravelItem), price: Number(data.price) },
+      ]);
+  };
+
+  const removeItem = async (id: string) => {
+    setItems((cur) => cur.filter((i) => i.id !== id));
+    setTrip((cur) => cur.filter((i) => i.id !== id));
+    await db.from("travel_items").delete().eq("id", id);
+  };
+
+  // ── Trip ──────────────────────────────────────────────────────────────────
+
+  const toggleTrip = (item: TravelItem) =>
     setTrip((cur) =>
       cur.some((t) => t.id === item.id)
         ? cur.filter((t) => t.id !== item.id)
-        : [...cur, item]
+        : [...cur, item],
     );
-  };
+
+  // ── Admin auth ────────────────────────────────────────────────────────────
 
   const submitAdmin = () => {
     if (adminPass === "5309") {
@@ -571,147 +222,360 @@ const Index = () => {
     }
   };
 
-  return (
-    <main className="min-h-screen bg-background pb-28 text-foreground">
+  // ─────────────────────────────────────────────────────────────────────────
 
-      {/* HEADER */}
-      <header className="sticky top-0 z-20 border-b bg-background/90 backdrop-blur px-4 py-3">
-        <div className="flex justify-between max-w-xl mx-auto">
-          <div>
-            <p className="text-xs font-bold text-primary uppercase">
-              Palawan planner
-            </p>
-            <h1 className="text-xl font-bold">
-              Build your island trip
-            </h1>
-          </div>
-          <button onClick={() => setAdminOpen(true)}>
-            <Edit3 />
-          </button>
+  return (
+    <div className="relative min-h-screen bg-background font-sans text-foreground antialiased">
+
+      {/* ── STICKY HEADER ── */}
+      <header className="sticky top-0 z-30 flex items-center justify-between px-5 py-4 bg-background/80 backdrop-blur-xl border-b border-white/10">
+        <div>
+          <p className="text-[10px] font-extrabold uppercase tracking-[0.18em] text-ocean/70">
+            Palawan
+          </p>
+          <h1 className="font-display text-[1.35rem] font-bold leading-tight tracking-tight text-foreground">
+            Build your island trip
+          </h1>
         </div>
+        <button
+          aria-label="Admin"
+          onClick={() => (isAdmin ? setIsAdmin(false) : setAdminOpen(true))}
+          className={`rounded-full p-2.5 transition active:scale-90 ${isAdmin ? "bg-coral text-white" : "bg-white/70 backdrop-blur border border-border shadow-card"}`}
+        >
+          <Edit3 className="h-4 w-4" />
+        </button>
       </header>
 
-      {/* CONTENT */}
-      <div className="max-w-xl mx-auto px-4 py-5 space-y-5">
+      <div className="mx-auto max-w-md space-y-0">
 
-        {/* 🔥 NEW CLEAN TOP */}
-        <div className="space-y-3">
-
-          {/* Trip Header */}
-          <div className="soft-panel p-3">
-            <div className="text-sm font-medium">
-              {origin || "Origin"} → {airport.replace(" Airport", "")}
-            </div>
-            <div className="text-xs text-muted-foreground">
-              Destination {selectedDestination?.code}
+        {/* ── AIRPORT SELECTOR (trip context) ── */}
+        <div className="px-5 pt-5 pb-3">
+          <div className="flex items-center gap-2 rounded-2xl bg-white/70 backdrop-blur border border-border shadow-card px-4 py-3">
+            <span className="text-xs font-bold text-muted-foreground uppercase tracking-wide">
+              Flying from
+            </span>
+            <div className="flex gap-2 overflow-x-auto scrollbar-none flex-1">
+              {AIRPORTS.map((ap) => (
+                <button
+                  key={ap}
+                  onClick={() => setAirport(ap)}
+                  className={`shrink-0 rounded-full px-3 py-1 text-xs font-bold transition active:scale-95 ${airport === ap ? "bg-ocean text-white" : "bg-muted text-muted-foreground"}`}
+                >
+                  {ap}
+                </button>
+              ))}
             </div>
           </div>
+        </div>
 
-          {/* Destination Hero */}
-          {selectedDestination && (
-            <div className="relative rounded-2xl overflow-hidden shadow-card">
-              <img
-                src={
-                  selectedDestination.image_url ||
-                  "https://images.unsplash.com/photo-1507525428034-b723cf961d3e"
-                }
-                className="w-full h-40 object-cover"
-              />
-              <div className="absolute inset-0 bg-black/30" />
-              <div className="absolute bottom-3 left-3 text-white">
-                <div className="text-sm opacity-80">
-                  Destination {selectedDestination.code}
-                </div>
-                <div className="text-lg font-semibold">
-                  {selectedDestination.name}
-                </div>
-                <div className="text-xs opacity-80">
-                  From {airport.replace(" Airport", "")}
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* Destination Selector */}
-          <div className="grid grid-cols-5 gap-2">
+        {/* ── DESTINATION PILLS ── */}
+        <div className="px-5 pb-4">
+          <div className="flex gap-2.5 overflow-x-auto scrollbar-none pb-1">
             {destinations.map((d) => (
               <button
                 key={d.id}
                 onClick={() => setDestinationId(d.id)}
-                className={`rounded-xl py-2 text-sm font-bold ${
-                  d.id === selectedDestination?.id
-                    ? "bg-primary text-white"
-                    : "bg-card border"
-                }`}
+                className={`shrink-0 rounded-full px-5 py-2.5 text-sm font-extrabold tracking-wide transition-all duration-200 active:scale-95 ${d.id === destinationId ? "bg-ocean text-white shadow-lift" : "bg-white/70 backdrop-blur border border-border text-foreground shadow-card"}`}
               >
                 {d.code}
               </button>
             ))}
           </div>
-
         </div>
 
-        {/* SECTIONS */}
-        {sectionOrder.map((section) => (
-          <section key={section} className="space-y-3">
-            <h2 className="text-lg font-bold">{sectionLabels[section]}</h2>
+        {/* ── HERO DESTINATION CARD ── */}
+        {selectedDest && (
+          <div className="px-5 pb-5">
+            <TripHero
+              destination={selectedDest}
+              airport={airport}
+              isAdmin={isAdmin}
+              onUpdateDestination={updateDestination}
+            />
+          </div>
+        )}
 
-            {destinationItems
-              .filter((i) => i.section === section)
-              .map((item) => (
-                <div key={item.id} className="travel-card p-4">
-                  <div className="flex justify-between">
-                    <div>
-                      <h3 className="font-bold">{item.name}</h3>
-                      <p className="text-sm text-muted-foreground">
-                        {item.short_info}
-                      </p>
-                    </div>
-                    <b>{money(item.price)}</b>
+        {/* ── CATEGORY FILTER TABS ── */}
+        <div className="px-5 pb-5">
+          <div className="flex gap-2 overflow-x-auto scrollbar-none">
+            <button
+              onClick={() => setActiveSection("all")}
+              className={`shrink-0 rounded-full px-4 py-2 text-xs font-bold uppercase tracking-wide transition active:scale-95 ${activeSection === "all" ? "bg-foreground text-background" : "bg-white/70 backdrop-blur border border-border text-muted-foreground"}`}
+            >
+              All
+            </button>
+            {SECTIONS.map((s) => (
+              <button
+                key={s.key}
+                onClick={() => setActiveSection(s.key)}
+                className={`shrink-0 rounded-full px-4 py-2 text-xs font-bold uppercase tracking-wide transition active:scale-95 ${activeSection === s.key ? "bg-foreground text-background" : "bg-white/70 backdrop-blur border border-border text-muted-foreground"}`}
+              >
+                {s.label}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* ── SECTIONS ── */}
+        {isLoading ? (
+          <div className="px-5 space-y-3 pb-36">
+            {[1, 2, 3].map((i) => (
+              <div key={i} className="h-64 rounded-3xl bg-muted animate-pulse" />
+            ))}
+          </div>
+        ) : (
+          <div className="space-y-8 px-5 pb-36">
+            {visibleSections.map((s) => {
+              const sectionItems = destItems.filter(
+                (item) => item.section === s.key,
+              );
+              if (!isAdmin && sectionItems.length === 0) return null;
+              return (
+                <section key={s.key}>
+                  <div className="mb-3 flex items-center justify-between">
+                    <h2 className="font-display text-xl font-bold">
+                      {s.label}
+                    </h2>
+                    {isAdmin && (
+                      <button
+                        onClick={() => addItem(s.key)}
+                        className="rounded-full bg-ocean/10 px-3 py-1.5 text-xs font-bold text-ocean active:scale-95 transition"
+                      >
+                        + Add
+                      </button>
+                    )}
                   </div>
-
-                  <button
-                    onClick={() => toggleTripItem(item)}
-                    className="mt-3 w-full bg-primary text-white py-2 rounded-xl"
-                  >
-                    Add to trip
-                  </button>
-                </div>
-              ))}
-          </section>
-        ))}
+                  <div className="space-y-4">
+                    {sectionItems.map((item) => (
+                      <TravelCard
+                        key={item.id}
+                        item={item}
+                        inTrip={trip.some((t) => t.id === item.id)}
+                        isAdmin={isAdmin}
+                        onToggle={() => toggleTrip(item)}
+                        onUpdate={(patch) => updateItem(item.id, patch)}
+                        onDelete={() => removeItem(item.id)}
+                      />
+                    ))}
+                    {isAdmin && sectionItems.length === 0 && (
+                      <div className="rounded-3xl border-2 border-dashed border-border p-8 text-center text-sm text-muted-foreground">
+                        No items yet — tap + Add
+                      </div>
+                    )}
+                  </div>
+                </section>
+              );
+            })}
+          </div>
+        )}
       </div>
 
-      {/* BOTTOM BAR */}
-      <div className="fixed bottom-0 left-0 right-0 p-4 bg-background border-t">
-        <div className="flex justify-between max-w-xl mx-auto">
-          <b>{money(total)}</b>
+      {/* ── STICKY BOTTOM BAR ── */}
+      <div className="fixed inset-x-0 bottom-0 z-30 px-5 pb-6 pt-3 bg-background/90 backdrop-blur-xl border-t border-white/10">
+        <div className="mx-auto flex max-w-md items-center justify-between gap-4">
+          <div>
+            <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
+              Trip total
+            </p>
+            <p className="text-2xl font-extrabold tracking-tight">
+              {money(total)}
+            </p>
+            {trip.length > 0 && (
+              <p className="text-xs text-muted-foreground">
+                {trip.length} item{trip.length !== 1 ? "s" : ""}
+              </p>
+            )}
+          </div>
           <button
             onClick={() => setReviewOpen(true)}
-            className="bg-black text-white px-4 py-2 rounded-xl"
+            className="rounded-2xl bg-ocean px-7 py-4 font-bold text-white shadow-lift active:scale-95 transition-all duration-150"
           >
-            Review
+            Review Trip
           </button>
         </div>
       </div>
 
-      {adminOpen && !isAdmin && (
-        <div className="fixed inset-0 flex items-center justify-center bg-black/40">
-          <div className="bg-white p-5 rounded-2xl">
-            <input
-              value={adminPass}
-              onChange={(e) => setAdminPass(e.target.value)}
-              placeholder="Passkey"
-              className="border p-2 mb-2"
-            />
-            <button onClick={submitAdmin} className="bg-black text-white px-3 py-2">
-              Enter
-            </button>
-          </div>
-        </div>
+      {/* ── REVIEW SHEET ── */}
+      {reviewOpen && (
+        <ReviewSheet
+          airport={airport}
+          destination={selectedDest}
+          trip={trip}
+          total={total}
+          onClose={() => setReviewOpen(false)}
+          onRemove={(id) => setTrip((cur) => cur.filter((t) => t.id !== id))}
+        />
       )}
-    </main>
+
+      {/* ── ADMIN PASSKEY MODAL ── */}
+      {adminOpen && !isAdmin && (
+        <AdminPasskeyModal
+          pass={adminPass}
+          setPass={setAdminPass}
+          onClose={() => setAdminOpen(false)}
+          onSubmit={submitAdmin}
+        />
+      )}
+
+      {/* ── ADMIN PANEL (slide from right) ── */}
+      {isAdmin && selectedDest && (
+        <AdminPanel
+          destination={selectedDest}
+          onUpdateDestination={updateDestination}
+          onClose={() => setIsAdmin(false)}
+        />
+      )}
+    </div>
   );
 };
+
+// ─── Review Bottom Sheet ──────────────────────────────────────────────────────
+
+const ReviewSheet = ({
+  airport,
+  destination,
+  trip,
+  total,
+  onClose,
+  onRemove,
+}: {
+  airport: string;
+  destination?: Destination;
+  trip: TravelItem[];
+  total: number;
+  onClose: () => void;
+  onRemove: (id: string) => void;
+}) => (
+  <div
+    className="fixed inset-0 z-50 flex items-end"
+    onClick={onClose}
+  >
+    <div
+      className="w-full max-h-[85vh] rounded-t-3xl bg-background/95 backdrop-blur-xl border-t border-white/10 shadow-lift overflow-hidden flex flex-col animate-soft-rise"
+      onClick={(e) => e.stopPropagation()}
+    >
+      {/* drag handle */}
+      <div className="flex justify-center pt-3 pb-1">
+        <div className="h-1 w-10 rounded-full bg-muted-foreground/30" />
+      </div>
+
+      <div className="px-5 py-4 border-b border-border flex items-center justify-between">
+        <div>
+          <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground">
+            Summary
+          </p>
+          <h2 className="font-display text-2xl font-bold">Your Trip</h2>
+        </div>
+        <button
+          onClick={onClose}
+          className="rounded-full bg-muted p-2.5 active:scale-90 transition"
+        >
+          <X className="h-4 w-4" />
+        </button>
+      </div>
+
+      {/* trip context */}
+      <div className="mx-5 mt-4 rounded-2xl bg-ocean/10 px-4 py-3 text-sm">
+        <p className="font-bold text-ocean">
+          {airport} → {destination?.name ?? "—"}
+        </p>
+      </div>
+
+      {/* items list */}
+      <div className="flex-1 overflow-y-auto px-5 py-4 space-y-3">
+        {trip.length === 0 ? (
+          <div className="rounded-3xl bg-muted p-8 text-center text-sm text-muted-foreground">
+            No items added yet. Go back and pick some!
+          </div>
+        ) : (
+          trip.map((item) => (
+            <div
+              key={item.id}
+              className="flex items-center justify-between gap-3 rounded-2xl border border-border bg-card px-4 py-3"
+            >
+              <div className="min-w-0">
+                <p className="font-bold text-sm truncate">{item.name}</p>
+                <p className="text-xs text-muted-foreground capitalize">
+                  {item.section}
+                </p>
+              </div>
+              <div className="flex items-center gap-3 shrink-0">
+                <span className="font-extrabold text-ocean">
+                  {money(item.price)}
+                </span>
+                <button
+                  onClick={() => onRemove(item.id)}
+                  className="rounded-full bg-muted p-1.5 active:scale-90 transition"
+                >
+                  <X className="h-3 w-3" />
+                </button>
+              </div>
+            </div>
+          ))
+        )}
+      </div>
+
+      {/* total footer */}
+      <div className="px-5 pb-8 pt-4 border-t border-border">
+        <div className="flex items-center justify-between mb-4">
+          <span className="font-bold text-muted-foreground">Total</span>
+          <span className="text-3xl font-extrabold text-ocean">
+            {money(total)}
+          </span>
+        </div>
+        <button className="w-full rounded-2xl bg-ocean py-4 font-bold text-white shadow-lift active:scale-95 transition">
+          Confirm Trip
+        </button>
+      </div>
+    </div>
+  </div>
+);
+
+// ─── Admin Passkey Modal ──────────────────────────────────────────────────────
+
+const AdminPasskeyModal = ({
+  pass,
+  setPass,
+  onSubmit,
+  onClose,
+}: {
+  pass: string;
+  setPass: (v: string) => void;
+  onSubmit: () => void;
+  onClose: () => void;
+}) => (
+  <div
+    className="fixed inset-0 z-50 flex items-end"
+    onClick={onClose}
+  >
+    <div
+      className="w-full rounded-t-3xl bg-background/95 backdrop-blur-xl border-t border-white/10 px-5 pb-10 pt-6 shadow-lift animate-soft-rise"
+      onClick={(e) => e.stopPropagation()}
+    >
+      <div className="flex justify-center mb-5">
+        <div className="h-1 w-10 rounded-full bg-muted-foreground/30" />
+      </div>
+      <h2 className="font-display text-2xl font-bold mb-1">Admin access</h2>
+      <p className="text-sm text-muted-foreground mb-5">
+        Enter passkey to edit content
+      </p>
+      <input
+        value={pass}
+        onChange={(e) => setPass(e.target.value)}
+        onKeyDown={(e) => e.key === "Enter" && onSubmit()}
+        type="password"
+        inputMode="numeric"
+        placeholder="••••"
+        className="w-full rounded-2xl border border-input bg-card px-4 py-4 text-lg text-center tracking-[0.4em] outline-none ring-ocean focus:ring-2 mb-3"
+      />
+      <button
+        onClick={onSubmit}
+        className="w-full rounded-2xl bg-ocean py-4 font-bold text-white active:scale-95 transition"
+      >
+        Enter
+      </button>
+    </div>
+  </div>
+);
 
 export default Index;

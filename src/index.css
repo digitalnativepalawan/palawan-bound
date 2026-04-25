@@ -2,39 +2,49 @@
 @tailwind components;
 @tailwind utilities;
 
+@import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Manrope:wght@400;500;600;700;800&display=swap');
+
 /* Definition of the design system. All colors, gradients, fonts, etc should be defined here. 
 All colors MUST be HSL.
 */
 
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 222.2 84% 4.9%;
+    --background: 42 55% 97%;
+    --foreground: 202 43% 13%;
 
     --card: 0 0% 100%;
-    --card-foreground: 222.2 84% 4.9%;
+    --card-foreground: 202 43% 13%;
 
     --popover: 0 0% 100%;
     --popover-foreground: 222.2 84% 4.9%;
 
-    --primary: 222.2 47.4% 11.2%;
-    --primary-foreground: 210 40% 98%;
+    --primary: 189 83% 28%;
+    --primary-foreground: 42 55% 97%;
 
-    --secondary: 210 40% 96.1%;
-    --secondary-foreground: 222.2 47.4% 11.2%;
+    --secondary: 148 29% 88%;
+    --secondary-foreground: 170 55% 18%;
 
-    --muted: 210 40% 96.1%;
-    --muted-foreground: 215.4 16.3% 46.9%;
+    --muted: 42 36% 91%;
+    --muted-foreground: 202 16% 39%;
 
-    --accent: 210 40% 96.1%;
-    --accent-foreground: 222.2 47.4% 11.2%;
+    --accent: 17 89% 69%;
+    --accent-foreground: 202 43% 13%;
 
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 210 40% 98%;
 
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 222.2 84% 4.9%;
+    --border: 42 28% 84%;
+    --input: 42 28% 84%;
+    --ring: 189 83% 28%;
+
+    --surface: 43 64% 94%;
+    --ocean: 189 83% 28%;
+    --palm: 151 42% 31%;
+    --sand: 39 83% 83%;
+    --coral: 17 89% 69%;
+    --shadow-card: 0 12px 34px -22px hsl(202 43% 13% / 0.36);
+    --shadow-lift: 0 18px 45px -24px hsl(189 83% 28% / 0.45);
 
     --radius: 0.5rem;
 
@@ -100,6 +110,16 @@ All colors MUST be HSL.
   }
 
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background text-foreground font-sans antialiased;
+  }
+}
+
+@layer components {
+  .travel-card {
+    @apply rounded-2xl border border-border bg-card shadow-card transition-transform duration-200 hover:-translate-y-0.5 hover:shadow-lift;
+  }
+
+  .soft-panel {
+    @apply rounded-2xl border border-border bg-surface/80 shadow-card;
   }
 }

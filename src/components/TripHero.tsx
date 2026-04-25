@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { MapPin } from "lucide-react";
 import type { Destination } from "@/pages/Index";
 
@@ -13,18 +13,14 @@ interface TripHeroProps {
   ) => void;
 }
 
-const TripHero = ({
-  destination,
-  airport,
-  isAdmin,
-  onUpdateDestination,
-}: TripHeroProps) => {
-  const [editingField, setEditingField] = useState<string | null>(null);
+const TripHero = ({ destination, airport, isAdmin, onUpdateDestination }: TripHeroProps) => {
+  const [imgDraft, setImgDraft] = useState(destination.image_url ?? "");
 
   return (
-    <div className="relative w-full overflow-hidden rounded-3xl shadow-lift">
-      {/* ── Image / Fallback ── */}
-      <div className="relative h-72 w-full bg-secondary">
+    <div className="relative w-full overflow-hidden rounded-[28px] shadow-[0_20px_60px_rgba(0,0,0,0.25)]">
+
+      {/* ── FULL BLEED IMAGE ── */}
+      <div className="relative h-[340px] w-full">
         {destination.image_url ? (
           <img
             src={destination.image_url}
@@ -32,125 +28,60 @@ const TripHero = ({
             className="absolute inset-0 h-full w-full object-cover"
           />
         ) : (
-          <div className="flex h-full items-center justify-center">
-            <MapPin className="h-10 w-10 text-muted-foreground/40" />
-          </div>
+          <div className="absolute inset-0 bg-gradient-to-br from-teal-900 via-teal-700 to-cyan-500" />
         )}
 
-        {/* gradient overlay */}
-        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
+        {/* heavy bottom gradient for text legibility */}
+        <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/30 to-transparent" />
 
-        {/* ── Bottom text overlay ── */}
-        <div className="absolute bottom-0 left-0 right-0 p-5">
-          <div className="flex items-end justify-between gap-3">
-            <div className="min-w-0">
-              {/* route pill */}
-              <div className="mb-2 inline-flex items-center gap-1.5 rounded-full bg-white/20 backdrop-blur px-3 py-1 text-xs font-bold text-white/90">
-                <span>{airport}</span>
-                <span className="opacity-50">→</span>
-                <span>Dest. {destination.code}</span>
-              </div>
+        {/* top: route context */}
+        <div className="absolute top-5 left-5 flex items-center gap-2">
+          <span className="rounded-full bg-white/15 backdrop-blur-md border border-white/20 px-3 py-1.5 text-xs font-bold text-white">
+            {airport}
+          </span>
+          <span className="text-white/40 text-xs">→</span>
+          <span className="rounded-full bg-white/15 backdrop-blur-md border border-white/20 px-3 py-1.5 text-xs font-bold text-white">
+            Dest. {destination.code}
+          </span>
+        </div>
 
-              {/* destination name */}
-              {isAdmin && editingField === "name" ? (
-                <AdminFieldInput
-                  value={destination.name}
-                  onSave={(v) => {
-                    onUpdateDestination(destination.id, "name", v);
-                    setEditingField(null);
-                  }}
-                  onCancel={() => setEditingField(null)}
-                  className="text-white bg-white/20 backdrop-blur"
-                />
-              ) : (
-                <h2
-                  className={`font-display text-3xl font-bold text-white leading-tight ${isAdmin ? "cursor-pointer underline decoration-dotted decoration-white/40" : ""}`}
-                  onClick={() => isAdmin && setEditingField("name")}
-                >
-                  {destination.name}
-                </h2>
-              )}
+        {/* bottom: destination info */}
+        <div className="absolute bottom-0 left-0 right-0 px-5 pb-6">
+          <p className="text-xs font-bold uppercase tracking-[0.2em] text-white/50 mb-1">
+            Destination {destination.code}
+          </p>
 
-              {/* map hint */}
-              {isAdmin && editingField === "map_hint" ? (
-                <AdminFieldInput
-                  value={destination.map_hint ?? ""}
-                  onSave={(v) => {
-                    onUpdateDestination(destination.id, "map_hint", v);
-                    setEditingField(null);
-                  }}
-                  onCancel={() => setEditingField(null)}
-                  className="text-white/80 bg-white/10 backdrop-blur mt-1"
-                />
-              ) : (
-                <p
-                  className={`mt-1 text-sm text-white/70 ${isAdmin ? "cursor-pointer underline decoration-dotted decoration-white/30" : ""}`}
-                  onClick={() => isAdmin && setEditingField("map_hint")}
-                >
-                  {destination.map_hint || (isAdmin ? "Tap to add map hint" : "")}
-                </p>
-              )}
+          <h2 className="font-display text-4xl font-bold text-white leading-none mb-2">
+            {destination.name}
+          </h2>
+
+          {destination.map_hint && (
+            <div className="flex items-center gap-1.5">
+              <MapPin className="h-3 w-3 text-white/50" />
+              <p className="text-sm text-white/60">{destination.map_hint}</p>
             </div>
-
-            {/* Destination code badge */}
-            <div className="shrink-0 rounded-2xl bg-white/20 backdrop-blur border border-white/30 px-4 py-3 text-center">
-              <p className="text-2xl font-extrabold text-white leading-none">
-                {destination.code}
-              </p>
-            </div>
-          </div>
+          )}
         </div>
       </div>
 
-      {/* ── Admin: image URL editor ── */}
+      {/* ── ADMIN IMAGE URL EDITOR ── */}
       {isAdmin && (
-        <div className="border-t border-border bg-card/80 backdrop-blur px-4 py-3">
-          <label className="block text-xs font-bold text-muted-foreground mb-1.5">
-            Image URL
-          </label>
-          <AdminFieldInput
-            value={destination.image_url ?? ""}
-            onSave={(v) => onUpdateDestination(destination.id, "image_url", v)}
-            placeholder="https://..."
-            className="bg-background text-foreground text-sm"
+        <div className="bg-zinc-900 px-4 py-3 flex gap-2">
+          <input
+            value={imgDraft}
+            onChange={(e) => setImgDraft(e.target.value)}
+            placeholder="Image URL..."
+            className="flex-1 rounded-xl bg-zinc-800 border border-zinc-700 px-3 py-2 text-xs text-white outline-none focus:border-teal-500"
           />
+          <button
+            onClick={() => onUpdateDestination(destination.id, "image_url", imgDraft)}
+            className="rounded-xl bg-teal-600 px-4 py-2 text-xs font-bold text-white active:scale-95 transition"
+          >
+            Save
+          </button>
         </div>
       )}
     </div>
-  );
-};
-
-// ─── Inline admin field input ─────────────────────────────────────────────────
-
-const AdminFieldInput = ({
-  value,
-  onSave,
-  onCancel,
-  placeholder,
-  className = "",
-}: {
-  value: string;
-  onSave: (v: string) => void;
-  onCancel?: () => void;
-  placeholder?: string;
-  className?: string;
-}) => {
-  const [draft, setDraft] = useState(value);
-  useEffect(() => setDraft(value), [value]);
-
-  return (
-    <input
-      value={draft}
-      onChange={(e) => setDraft(e.target.value)}
-      onBlur={() => onSave(draft)}
-      onKeyDown={(e) => {
-        if (e.key === "Enter") onSave(draft);
-        if (e.key === "Escape") onCancel?.();
-      }}
-      autoFocus
-      placeholder={placeholder}
-      className={`w-full rounded-xl border border-white/20 px-3 py-2 outline-none ring-ocean/50 focus:ring-2 ${className}`}
-    />
   );
 };
 
